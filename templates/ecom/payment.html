@@ -1,0 +1,145 @@
+{% extends 'ecom/customer_base.html' %}
+{% load static %}
+
+{% block content %}
+<head>
+
+</head>
+<style media="screen">
+
+.panel-title {display: inline;font-weight: bold;}
+.checkbox.pull-right { margin: 0; }
+.pl-ziro { padding-left: 0px; }
+
+
+</style>
+<br><br>
+<br><br>
+<div class="container" style="text-align:center; padding-left:300px;">
+    <div class="row">
+        <div class="col-xs-12 col-md-4" style="height:500px; width:600px;">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Payment Details
+                    </h3>
+                    <div class="checkbox pull-right">
+                        <label>
+                            <input type="checkbox" />
+                            Remember
+                        </label>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <!-- <form role="form" method="post">
+                    <div class="form-group">
+                        <label for="cardNumber">
+                            CARD NUMBER</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="cardNumber" placeholder="xxxx xxxx xxxx xxxx"
+                                required autofocus />
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-4 col-md-4 pull-left">
+                            <div class="form-group">
+                                <label for="cvCode">
+                                    MONTH</label>
+                                
+                                    <input type="text" class="form-control" id="expityMonth" placeholder="MM - 02" required />
+                               
+                            </div>
+                        </div>
+
+                        <div class="col-xs-4 col-md-4">
+                            <div class="form-group">
+                                <label for="expityMonth">
+                                    EXPIRY DATE</label>
+                               
+                                
+                               
+                                    <input type="text" class="form-control" id="expityYear" placeholder="YY - 22" required /></div>
+                            
+                        </div>
+                        <div class="col-xs-4 col-md-4 pull-right">
+                            <div class="form-group">
+                                <label for="cvCode">
+                                    CV CODE</label>
+                                <input type="password" class="form-control" id="cvCode" placeholder="CV - xxx" required />
+                            </div>
+                        </div>
+                    </div>
+                    </form> -->
+                </div>
+            </div>
+            <ul class="nav nav-pills nav-stacked">
+                <li class="active"><a href="#">Final Payment : $<span id="grand-total" class="pay">{{ total }}</span></a></li>
+            </ul>
+           
+            
+            <br/>
+
+    <!-- Include the PayPal JavaScript SDK -->
+     <div id="paypal-button-container"></div>
+
+    <script src="https://www.paypal.com/sdk/js?client-id=AbK1NnFWmuQKRwHdd6LTDv9bBmNaORS7vFpNts7jvOW4B1wMltX86rj5O9De1MnP-Tm3bzkQOjMD8fUi&currency=USD"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const savedTotal = localStorage.getItem('grandTotal');
+          if (savedTotal) {
+            document.getElementById('grand-total').innerText = savedTotal;
+          }
+      
+          paypal.Buttons({
+            createOrder: function (data, actions) {
+              const totalAmount = localStorage.getItem('grandTotal') || '0.00';
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: totalAmount
+                  }
+                }]
+              });
+            },
+            onApprove: function (data, actions) {
+                return actions.order.capture().then(function(details) {
+            // After payment success, decrease stock in the backend
+            fetch('/update-stock/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    order_id: details.id,
+                    product_id: details.product_id, // Send product ID from order
+                    quantity: details.quantity // Send the ordered quantity
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf_token // Include CSRF token for security
+                }
+            })
+            .then(response => response.json())
+            .then(responseData => {
+                // Handle success or error
+                if(responseData.success) {
+                    alert('Transaction completed by ' + details.payer.name.given_name + '! and stock updated');
+                    window.location.href = "/payment-success";
+                } else {
+                    alert('Error updating stock.');
+                }
+            });
+        });
+    }
+}).render('#paypal-button-container');
+        });
+      </script>
+      
+
+
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}

@@ -1,0 +1,208 @@
+{% extends 'ecom/homebase.html' %}
+{% load static %}
+{% block content %}
+
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<style media="screen">
+  .button {
+  display: inline-block;
+  border-radius: 4px;
+  background-color: #f4511e;
+  border: none;
+  color: #FFFFFF;
+  text-align: center;
+  font-size: 28px;
+  padding: 20px;
+  width: 200px;
+  transition: all 0.5s;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.update{
+  padding-top: 4px;
+  padding-left: 5px;
+  padding-bottom: 5px;
+  padding-right: 5px;
+  font-size: 15px;
+}
+
+
+.button span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.5s;
+}
+
+.button span:after {
+  content: '\00bb';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.5s;
+}
+
+.button:hover span {
+  padding-right: 25px;
+}
+
+.button:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+
+.button2 {
+  background-color: white;
+  color: black;
+  border: 2px solid #008CBA;
+}
+
+.button2:hover {
+  background-color: #008CBA;
+  color: white;
+}
+  .qty-error {
+    margin-top: 5px;
+  }
+</style>
+
+</style>
+
+</head>
+<br><br><br><br>
+
+<div class="container">
+  <div class="panel panel-success">
+    <div class="panel-heading">
+      <h6 style="text-align:center;" class="panel-title">My Cart</h6>
+    </div>
+    <table class="table table-hover table-bordered" id="dev-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Image</th>
+          <th>Price</th>
+          <th>Description</th>
+          <th>Action</th>
+
+        </tr>
+      </thead>
+      {% for p in products %}
+  {% if p %}
+      
+      <tr class="cart-item" data-unit-price="{{ p.price }}" data-available="{{ p.stock }}">
+        <td> {{p.name}}</td>
+        <td> <img src="{% static p.product_image.url %}" alt="Profile Pic" height="50px" width="50px" /></td>
+        <td>$ <span class="item-total">{{ p.price }}</span></td>
+        <td>{{p.description}}</td>
+
+        <td>
+          <button type="button" onclick="decreaseQty(this)">−</button>
+          <input type="number" name="quantity" class="qty-input" value="1" min="1" style="width: 50px; text-align: center;" />
+          <button type="button" onclick="increaseQty(this)">+</button>
+          <a class="btn btn-danger btn-xs" href="{% url 'remove-from-cart' p.id  %}">
+            <span class="glyphicon glyphicon-trash update"></span>
+          </a>
+        </td>
+        
+
+      </tr>
+      {%else%}
+      <br><br><br>
+      <h1>no products</h1>
+      {% endif %}
+      {% endfor %}
+    </table>
+  </div>
+</div>
+<br><br><br>
+<div style="text-align: center;">
+  <button class="btn btn-danger btn-lg">Total $<span id="grand-total">{{ total }}</span></button>
+
+  <a href="/customer-address"><button class="btn btn-success btn-lg" ><span>Purchase </span></button></a>
+</div>
+
+
+<br><br><br><br><br>
+
+
+<script>
+  window.onload = function () {
+    function updateItemTotal(row) {
+      const unitPrice = parseFloat(row.dataset.unitPrice);
+      const qty = parseInt(row.querySelector('.qty-input').value);
+      const itemTotal = row.querySelector('.item-total');
+      const total = unitPrice * qty;
+      itemTotal.innerText = total.toFixed(2);
+      updateGrandTotal();  // recalculate grand total
+    }
+
+    function updateGrandTotal() {
+      const itemTotals = document.querySelectorAll('.item-total');
+      let grandTotal = 0;
+      itemTotals.forEach(span => {
+        grandTotal += parseFloat(span.innerText);
+      });
+      document.getElementById('grand-total').innerText = grandTotal.toFixed(2);
+      localStorage.setItem('grandTotal', grandTotal.toFixed(2));
+
+    }
+
+    window.increaseQty = function (button) {
+  const row = button.closest('.cart-item');
+  const input = row.querySelector('.qty-input');
+  const available = parseInt(row.dataset.available);
+  const currentQty = parseInt(input.value);
+
+  if (currentQty < available) {
+    input.value = currentQty + 1;
+    updateItemTotal(row);
+    clearError(row);
+  } else {
+    showError(row, `Only ${available} item(s) available in stock.`);
+  }
+}
+
+    window.decreaseQty = function (button) {
+      const row = button.closest('.cart-item');
+      const input = row.querySelector('.qty-input');
+      if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+        updateItemTotal(row);
+      }
+    }
+
+    function showError(row, message) {
+  let error = row.querySelector('.qty-error');
+  if (!error) {
+    error = document.createElement('div');
+    error.className = 'qty-error';
+    error.style.color = 'red';
+    error.style.fontSize = '12px';
+    row.querySelector('td:last-child').appendChild(error);
+  }
+  error.innerText = message;
+}
+
+function clearError(row) {
+  const error = row.querySelector('.qty-error');
+  if (error) {
+    error.remove();
+  }
+}
+
+    // Optional: recalculate totals on load
+    document.querySelectorAll('.cart-item').forEach(row => updateItemTotal(row));
+  };
+ 
+</script>
+
+  
+  
+{% endblock content %}
